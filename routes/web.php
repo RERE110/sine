@@ -13,27 +13,27 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-$urls = [
-    "PROD" => [
-        "PORTAL" => "https://portal.mahalo-app.io/oauth/token",
-        "WS" => "https://api.mahalo-app.io/aboweb"
-    ],
-    "PREPROD" => [
-        "PORTAL" => "https://portal-preprod.mahalo-app.io/oauth/token",
-        "WS" => "https://api-preprod.mahalo-app.io/aboweb"
-    ],
-    "RECETTE" => [
-        "PORTAL" => "https://portal-recette.mahalo-app.io/oauth/token",
-        "WS" => "https://api-recette.mahalo-app.io/aboweb"
-    ],
-    "LOCAL" => [
-        "PORTAL" => "https://localhost:8443/aboweb-portal/oauth/token",
-        "WS" => "https://localhost:8443/aboweb-ws"
-    ]
-];
+
 
 function getToken($username, $password, $json=true) {
-    global $urls;
+    $urls = [
+        "PROD" => [
+            "PORTAL" => "https://portal.mahalo-app.io/oauth/token",
+            "WS" => "https://api.mahalo-app.io/aboweb"
+        ],
+        "PREPROD" => [
+            "PORTAL" => "https://portal-preprod.mahalo-app.io/oauth/token",
+            "WS" => "https://api-preprod.mahalo-app.io/aboweb"
+        ],
+        "RECETTE" => [
+            "PORTAL" => "https://portal-recette.mahalo-app.io/oauth/token",
+            "WS" => "https://api-recette.mahalo-app.io/aboweb"
+        ],
+        "LOCAL" => [
+            "PORTAL" => "https://localhost:8443/aboweb-portal/oauth/token",
+            "WS" => "https://localhost:8443/aboweb-ws"
+        ]
+    ];
     if($json === true){ // on affiche que dans le cas ou on veut du json
         print "<div><pre>Recuperation du token</pre></div>";
     }
@@ -51,7 +51,7 @@ function getToken($username, $password, $json=true) {
         'Content-Type: application/x-www-form-urlencoded'
     );
 
-    $response = callApi($urls[TARGET]["PORTAL"], $data_string, "POST", $headers, $json, true);
+    $response = callApi($urls["PORTAL"], $data_string, "POST", $headers, $json, true);
     if($json === true){
         print "<div><pre>TOKEN API : ".$response->access_token."</pre></div>";
     }
@@ -98,5 +98,5 @@ function getToken($username, $password, $json=true) {
 
 
 Route::get('/', function () {
-    return $this->getToken("abonnement@sinemensuel.com","qaCd9Mkep.*B4yK");
+    return getToken("abonnement@sinemensuel.com","qaCd9Mkep.*B4yK");
 });
