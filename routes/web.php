@@ -138,13 +138,26 @@ function getToken($username, $password, $json=true) {
 
 
     $params = [
-        "maxResults" => 2, // champs obligatoire compris entre 1 et 100
+        "maxResults" => 1, // champs obligatoire compris entre 1 et 100
         "sortOrder" => 1, // permet de trier par ordre croissant (<=> 1) ou d�croissant (<=> -1) sur le sortField
-        "sortField" => "dateFinAbonnement" // permet de filtrer sur la colonne dateFin
     ];
+
+    $email = "gregory.vassal1@gmail.com";
+    $filters = [ "email" => [
+        "value" => $email,
+        "matchMode" => "equals"
+    ]
+    ];
+
+    $params["filters"] = json_encode($filters);
+
+    print "Recherche du client ayant l'email = ".$email."<br>";
+    $response = callApiGet("/editeur/187/client", $response->access_token, $params);
+    return $response;
 
 
     //TRAITEMENT DES CALL API
+    $client = callApiGet("/editeur/187/client/11574/", $response->access_token, $params);
 
     $response = callApiGet("/editeur/187/client/11574/", $response->access_token, $params);
 
@@ -199,5 +212,85 @@ function getToken($username, $password, $json=true) {
 
 
 Route::get('/', function () {
+
+    $base_url = 'https://www.sinemensuel.com/wp-json/wp/v2/users';
+    $per_page = 100; // Nombre maximal d'utilisateurs par page
+    $page = 1;
+    $all_users = [];
+    $continue = true;
+
+    while ($continue) {
+        $response = \Illuminate\Support\Facades\Http::get($base_url, [
+            'per_page' => $per_page,
+            'page' => $page,
+        ]);
+
+        if ($response->successful()) {
+            $users = $response->json();
+
+            // Ajoute les utilisateurs récupérés à notre tableau total
+            $all_users = array_merge($all_users, $users);
+
+            // Vérifie si on a récupéré le nombre maximal d'utilisateurs, sinon c'est la dernière page
+            $continue = count($users) === $per_page;
+        } else {
+            // En cas d'échec de la requête (par exemple, une erreur 404 ou 403), arrête la boucle
+            $continue = false;
+            // Vous pouvez gérer les erreurs plus finement ici en fonction de vos besoins
+            return "Échec de la récupération des utilisateurs à la page $page. Code d'état HTTP: " . $response->status();
+        }
+
+        $page++;
+    }
+
+    // Ici, vous avez $all_users contenant tous les utilisateurs récupérés
+    // Vous pouvez maintenant traiter ou retourner ces données comme nécessaire
+    return $all_users;
+
+
+    $per_page = 100; // WordPress limite généralement les résultats à 100 par page au maximum
+
+// Initialisation
+    $page = 1;
+    $all_users = [];
+
+    do {
+        $url = $base_url . '?per_page=' . $per_page . '&page=' . $page;
+
+        // Initialise la session cURL
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, true);
+
+        // Exécute la requête
+        $response = curl_exec($curl);
+        $header_size = curl_getinfo($curl, CURLINFO_HEADER_SIZE);
+        $header = substr($response, 0, $header_size);
+        $body = substr($response, $header_size);
+
+        $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        return $status;
+        if ($status == 200) {
+            $users = json_decode($body);
+            $all_users = array_merge($all_users, $users);
+        } else {
+            // Gérer les erreurs, par exemple en affichant un message d'erreur
+            break; // Sort de la boucle si une erreur survient
+        }
+
+        // Ferme la session cURL
+        curl_close($curl);
+
+        // Incrémente la page pour la prochaine itération
+        $page++;
+
+        // Vérifie si la réponse contient moins d'utilisateurs que le maximum par page, ce qui signifie que c'est la dernière page
+    } while (!empty($users) && sizeof($users) == $per_page);
+
+// À ce stade, $all_users contient tous les utilisateurs récupérés
+    foreach ($all_users as $user) {
+        return 'Email: ' . $user->email . "<br>\n";
+    }
+    return "o";
     return getToken("abonnement@sinemensuel.com","qaCd9Mkep.*B4yK");
 });
